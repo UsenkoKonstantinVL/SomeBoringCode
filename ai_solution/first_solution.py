@@ -1,5 +1,6 @@
 import json
 import numpy as np
+import .util as util
 
 
 COMMAND_LEFT = 'left'
@@ -121,7 +122,14 @@ class SimpleSolution:
             state: состояние игры.
             act: предположительное действие.
         """
-        return 1
+        next_point = util.get_next_point(state, act)
+        paths_list = util.construct_paths(point, next_point, state)
+        max_score = 0
+        for path in paths_list:
+            score = util.compute_path_score(path, state)
+            if score > max_score:
+                max_score = score
+        return max_score
 
     def is_finish(self):
         """
