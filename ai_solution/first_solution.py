@@ -1,6 +1,6 @@
 import json
 import numpy as np
-import .util as util
+import util as util
 
 
 COMMAND_LEFT = 'left'
@@ -79,7 +79,10 @@ class SimpleSolution:
         Чтение данных о текущем тике.
         """
         input_text = input()
-        return json.loads(input_text)
+        parsed_json = json.loads(input_text)
+        parsed_json['params']['x_cells_count'] = self.x_cells_count
+        parsed_json['params']['y_cells_count'] = self.y_cells_count
+        return parsed_json
 
     def wait_for_start(self):
         """
@@ -98,12 +101,16 @@ class SimpleSolution:
 
         action_list = []
         prob_list = []
-        for cmd, score in cmd2score_dict.items():
-            action_list.append(cmd)
-            prob_list.append(score / sum_score)
+        prob_list = self.get_prob(cmd2score_dict)
+        # for cmd, score in cmd2score_dict.items():
+        #     action_list.append(cmd)
+        #     prob_list.append(score / sum_score)
 
         cmd = np.random.choice(action_list, p=prob_list)
         return cmd
+
+    def get_prob(self, cmd2score_dict):
+        raise NotImplementedError()
 
     def get_points_of_interests(self, state):
         """
@@ -123,6 +130,8 @@ class SimpleSolution:
             act: предположительное действие.
         """
         next_point = util.get_next_point(state, act)
+        if not util.check_for_available(next_point, state):
+            return -10000000.0
         paths_list = util.construct_paths(point, next_point, state)
         max_score = 0
         for path in paths_list:
