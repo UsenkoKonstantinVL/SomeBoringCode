@@ -119,7 +119,7 @@ class SimpleSolution:
         Args: 
             point: целевая точка. 
             state: состояние игры.
-            act: предположительное действие.
+            act: предположительное действие [left, right, up, down].
         """
         return 1
 
