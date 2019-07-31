@@ -37,6 +37,12 @@ class SimpleSolution:
             COMMAND_LEFT, COMMAND_RIGHT,
             COMMAND_UP, COMMAND_DOWN
         ]
+        self.command_acts = {
+            [-1,  0]: COMMAND_LEFT,
+            [ 1,  0]: COMMAND_RIGHT,
+            [ 0, -1]: COMMAND_DOWN,
+            [ 0,  1]: COMMAND_UP
+        }
 
         self.is_finish = False
 
@@ -74,7 +80,23 @@ class SimpleSolution:
             cur_pos: текущее положение игрока.
             best_path: путь.
         """
-        pass
+        cmd = ''
+
+        cur_pos_index = -1
+        for i in range(len(best_path)):
+            if best_path[i] == cur_pos:
+                cur_pos_index = i
+                break
+
+        next_pos = best_path[i + 1]
+
+        next_move_act = []
+        next_move_act[0] = next_pos[0] - cur_pos[0]
+        next_move_act[1] = next_pos[1] - cur_pos[1]
+
+        cmd = self.command_acts[next_move_act] 
+
+        print(cmd)
 
     def search_path(self, matrix_env_state):
         """
@@ -98,7 +120,10 @@ class SimpleSolution:
         Return:
             Целевая точка.
         """
-        return state
+        boarders = state['params']['i']['territory']
+
+        choosen_point = np.random.choice(boarders)
+        return choosen_point
 
     def transform_state(self, state):
         """
