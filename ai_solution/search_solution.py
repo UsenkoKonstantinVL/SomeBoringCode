@@ -15,6 +15,24 @@ M_PL_POS_VALUE = 1
 M_PL_TERRITORY_VALUE = 1
 M_PL_LINE_VALUE = 1
 
+M_DEFAULT_VALUE = 0
+
+KERNEL_SIZE = 3
+KERNEL_SIGMA = 0.8
+
+
+def gkern(l=5, sig=1.):
+    """\
+    creates gaussian kernel with side length l and a sigma of sig
+    """
+
+    ax = np.arange(-l // 2 + 1., l // 2 + 1.)
+    xx, yy = np.meshgrid(ax, ax)
+
+    kernel = np.exp(-0.5 * (np.square(xx) + np.square(yy)) / np.square(sig))
+
+    return kernel / np.sum(kernel)
+
 
 class SimpleSolution:
     """
@@ -155,7 +173,8 @@ class SimpleSolution:
                 player_state,
                 position_value,
                 territory_value,
-                line_value
+                line_value,
+                use_filtering=False
         ):
             player_pos = player_state['position']
             x, y = player_pos[0], player_pos[1]
@@ -166,6 +185,15 @@ class SimpleSolution:
                 t_y = territory_pos[1]
                 matrix[t_x, t_y] = territory_value
 
+            if use_filtering:
+                kernel = gkern(KERNEL_SIZE, KERNEL_SIGMA)
+                matrix = convolve(matrix, kernel)
+
+                for territory_pos in player_state['territory']:
+                    t_x = territory_pos[0]
+                    t_y = territory_pos[1]
+                    matrix[t_x, t_y] = territory_value
+
             for line_pos in player_state['lines']:
                 l_x = line_pos[0]
                 l_y = line_pos[1]
@@ -174,6 +202,7 @@ class SimpleSolution:
             return matrix
 
         new_state = np.zeros((self.x_cells_count, self.y_cells_count))
+        new_state.fill(M_DEFAULT_VALUE)
         players = state['params']['players']
 
         for player in players:
@@ -201,3 +230,36 @@ class SimpleSolution:
         """
         input_text = input()
         return json.loads(input_text)
+
+
+if __name__ == '__main__':
+    from scipy.ndimage.filters import convolve
+    import numpy as np
+
+    grid = np.zeros((5, 5))
+    grid[2, 2] = 50
+
+
+    def gauss_kernel(size, sigma):
+        x = np.linspace(- (size // 2), size // 2)
+        x /= np.sqrt(2) * sigma
+        x2 = x ** 2
+        kernel = np.exp(- x2[:, None] - x2[None, :])
+        return kernel / kernel.sum()
+
+
+    def gkern(l=5, sig=1.):
+        """\
+        creates gaussian kernel with side length l and a sigma of sig
+        """
+
+        ax = np.arange(-l // 2 + 1., l // 2 + 1.)
+        xx, yy = np.meshgrid(ax, ax)
+
+        kernel = np.exp(-0.5 * (np.square(xx) + np.square(yy)) / np.square(sig))
+
+        return kernel / np.sum(kernel)
+
+    kernel = gkern(3, 0.5)
+    print(kernel)
+    print(convolve(grid, kernel))
